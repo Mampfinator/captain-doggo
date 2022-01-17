@@ -9,6 +9,7 @@ Settings.init(
             unique: true
         },
         logChannel: DataTypes.STRING,
+        publicModlogChannel: DataTypes.STRING,
     }, {
         sequelize,
         timestamps: false,

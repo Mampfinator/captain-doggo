@@ -1,8 +1,10 @@
 const { config } = require("dotenv"); config();
 const { Client, Intents, MessageEmbed } = require("discord.js"); 
 const { Settings, sequelize } = require("./db");
-const { builders , executors } = require("./commands");
-const { timedOut, getSettings } = require("./util");
+//const { builders , executors } = require("./commands");
+const { timedOut, getSettings, loadCommands } = require("./util");
+const { executors, builders } = loadCommands(`${__dirname}/commands`);
+
 
 process.on("uncaughtException", error => {
     console.error("Uncaught exception: ", error)
@@ -61,9 +63,10 @@ client.on("guildMemberUpdate", async (oldMember, newMember) => {
 });
 
 client.on("ready", async () => {
-    await sequelize.sync({alter: {
-        drop: false
-    }});
+
+    console.log(`Logged in as ${client.user.tag} (${client.user.id}).`);
+
+    await sequelize.sync({alter: true});
 
     for (const guild of client.guilds.cache.values()) {
         await guild.members.fetch();
@@ -85,7 +88,7 @@ client.on("guildCreate", async guild => {
     if (await getSettings(guild)) return;
     await Settings.create({
         guildId: guild.id
-    })
+    });
 });
 
 
