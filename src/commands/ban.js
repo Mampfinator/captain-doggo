@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const { CommandInteraction, MessageEmbed } = require("discord.js");
-const { getSettings } = require("../util");
+const { getSettings, isLowerInHierarchy } = require("../util");
 
 module.exports = {
     builder: new SlashCommandBuilder()
@@ -18,6 +18,10 @@ module.exports = {
         .addBooleanOption(silent => silent
             .setName("silent")
             .setDescription("Whether to make a public announcement or not. Defaults to true.")
+        )
+        .addBooleanOption(dm => dm
+            .setName("dm")
+            .setDescription("Whether or not to DM the user the ban reason. Defaults to opposite of silent, or true.")    
         )
         .addIntegerOption(purge => purge
             .setName("purge")
@@ -39,28 +43,41 @@ module.exports = {
         const reason = interaction.options.getString("reason") ?? "No reason provided.";
         const purgeDays = interaction.options.getInteger("purge");
         const silent = interaction.options.getBoolean("silent");
+        const dm = interaction.options.getBoolean("dm");
 
-        if (    !interaction.member.permissions.has("BAN_MEMBERS")  || 
-                targetMember.permissions.has("ADMINISTRATOR")       || 
-                targetMember.permissions.has("MANAGE_GUILD")        || 
-                !targetMember.bannable                              )
-                return await interaction.reply({
-                    embeds: [
-                        new MessageEmbed()
-                            .setTitle("Permission Error")
-                            .setDescription(`Could not ban user ${targetUser} because you lack the necessary permissions.`)
-                            .setColor("RED")
-                    ]
-                });
+        if (!interaction.member.permissions.has("BAN_MEMBERS")  || 
+            targetMember.permissions.has("ADMINISTRATOR")       || 
+            targetMember.permissions.has("MANAGE_GUILD")        || 
+            !targetMember.bannable                              )
+            return await interaction.reply({
+                embeds: [
+                    new MessageEmbed()
+                        .setTitle("Permission Error")
+                        .setDescription(`Could not ban user ${targetUser} because you lack the necessary permissions.`)
+                        .setColor("RED")
+                ]
+            });
 
-        if (targetMember.roles.highest.position >= interaction.member.roles.highest.position) return await interaction.reply({
+        if (isLowerInHierarchy(interaction.member, targetMember)) return await interaction.reply({
             embeds: [
                 new MessageEmbed()
                     .setTitle("Permission Error")
                     .setDescription("You can't ban a user above you in the role hierarchy!")
                     .setColor("RED")
             ]
-        })
+        });
+
+        // default to "true" for DMs.
+        if (dm ?? !(silent ?? false)) {
+            await targetUser.send({
+                embeds: [new MessageEmbed()
+                    .setTitle(`You have been banned!`)
+                    .setDescription(`You have been banned in ${targetMember.guild.name} for the following reason: \n\`\`\`${reason ?? "No reason provided."}\n\`\`\``)
+                    .setThumbnail(targetMember.guild.iconURL())
+                    .setColor("RED")
+                ]
+            });
+        }
 
         await targetMember.ban({
             reason: `Banned by ${interaction.user.tag} (${interaction.user.id}) for: ${reason}`,

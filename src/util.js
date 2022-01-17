@@ -45,10 +45,20 @@ function loadCommands(path) {
 
     return {builders, executors};
 }
+/**
+ * 
+ * @param {GuildMember} member 
+ * @param {GuildMember} otherMember 
+ */
+function isLowerInHierarchy(member, otherMember) {
+    if (!member.roles || !otherMember.roles) throw new TypeError("Did not pass valid member.");
+    return member.roles.highest.position < otherMember.roles.highest.position;
+}
 
 
 module.exports = {
     timedOut,
     getSettings,
-    loadCommands
+    loadCommands,
+    isLowerInHierarchy
 }
