@@ -53,7 +53,7 @@ module.exports = {
                 embeds: [
                     new MessageEmbed()
                         .setTitle("Permission Error")
-                        .setDescription(`Could not ban user ${targetUser} because you lack the necessary permissions.`)
+                        .setDescription(`Could not ban user ${targetUser} because you (or I) lack the necessary permissions.`)
                         .setColor("RED")
                 ]
             });
