@@ -27,8 +27,8 @@ module.exports = {
     ],
     executors: new Map()
         .set("settings", async interaction => {
-            if (!interaction.inGuild()) return await interaction.reply({embed: new MessageEmbed().setDescription("Not usable in DMs!").setColor("RED")});
-            if (!interaction.member.permissions.has("MANAGE_CHANNELS")) return await interaction.reply({embed: new MessageEmbed().setDescription("You need the **Manage Channels** permission to view/change settings!")});
+            if (!interaction.inGuild()) return await interaction.reply({embeds: [new MessageEmbed().setDescription("Not usable in DMs!").setColor("RED")]});
+            if (!interaction.member.permissions.has("MANAGE_CHANNELS")) return await interaction.reply({embeds: [new MessageEmbed().setDescription("You need the **Manage Channels** permission to view/change settings!")], ephemeral: true});
             
             const settings = await getSettings(interaction.guild);
             
